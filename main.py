@@ -1,8 +1,12 @@
 class Snake:
-    def __init__(self,body = [(5,5)], direction = 'RIGHT', alive = True):
+    def __init__(self,body = None, direction = 'RIGHT', alive = True):
+        if body is None:
+            body = [(5,5)]
+            
         self.body = body
         self.direction = direction
         self.alive = alive
+        self.growing = False
         
     def move(self):
         current_head = self.body[0]
@@ -15,8 +19,13 @@ class Snake:
             new_head = (head_x,head_y + 1)
         elif self.direction == 'UP':
             new_head = (head_x,head_y - 1)
+        
         self.body.insert(0,new_head)
-        self.body.pop()
+        
+        if self.growing:
+            self.growing = False
+        else:
+            self.body.pop()
     
     def change_direction(self,new_direction):
         if self.direction == 'RIGHT' and new_direction != 'LEFT':
@@ -27,9 +36,26 @@ class Snake:
             self.direction = new_direction
         elif self.direction == 'DOWN' and new_direction != 'UP':
             self.direction = new_direction
+            
+    def is_on_apple(self,apple):
+        current_head = self.body[0]
+        if current_head == apple.position:
+            return True
+        return False
+    
+    def grow(self):
+        self.growing = True
         
-snake = Snake(body = [(5,5),(4,5),(3,5)],direction = "RIGHT")
-snake.move()
-snake.change_direction('UP')
-print(snake.body)
-print(snake.direction)
+class Apple:
+    def __init__(self,position = (10,10), points = 10):
+        self.position = position
+        self.points = points
+        
+apple = Apple()
+print(apple.position,apple.points)
+
+snake = Snake(body = [(10,10)])
+apple = Apple(position = (10,10))
+
+if snake.is_on_apple(apple):
+    snake.grow()
