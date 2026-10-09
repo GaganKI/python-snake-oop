@@ -1,3 +1,4 @@
+import random
 class Snake:
     def __init__(self,body = None, direction = 'RIGHT', alive = True):
         if body is None:
@@ -43,6 +44,11 @@ class Snake:
             return True
         return False
     
+    def occupies(self,position):
+        if position in self.body:
+            return True
+        return False
+    
     def grow(self):
         self.growing = True
         
@@ -51,11 +57,35 @@ class Apple:
         self.position = position
         self.points = points
         
-apple = Apple()
-print(apple.position,apple.points)
+    def respawn(self,board):
+        self.position = board.random_position()
+        
+class Board:
+    def __init__(self,width = 20,height = 20):
+        self.width = width
+        self.height = height
+        
+    def random_position(self):
+        x = random.randint(0, self.width - 1)
+        y = random.randint(0, self.height - 1)
+        
+        return (x,y)
 
-snake = Snake(body = [(10,10)])
-apple = Apple(position = (10,10))
 
-if snake.is_on_apple(apple):
-    snake.grow()
+class Game:
+    def __init__(self):
+        self.board = Board()
+        self.snake = Snake()
+        self.apple = Apple()
+        self.score = 0
+    
+    def spawn_apple(self):
+        position = self.board.random_position()
+        
+        while self.snake.occupies(position):
+            position = self.board.random_position()
+
+        self.apple.position = position
+        
+game = Game()
+

@@ -1,38 +1,40 @@
-# 🐍 Snake — OOP Learning Project
+# 🐍 Snake OOP — Learning Python OOP by Building a Game
 
-A Snake game built from scratch in Python as a hands-on project to master **Object-Oriented Programming (OOP)**, Python fundamentals, and software design.
+A Snake game built from scratch in Python with a primary goal:
 
-This project is being developed incrementally instead of starting from a completed implementation. Each feature is introduced to solve an actual problem in the game and reinforce an OOP concept.
+> **Learn and master Object-Oriented Programming by building a real project instead of studying OOP concepts in isolation.**
+
+This project is being developed incrementally, with each new feature introducing an important Python/OOP concept.
+
+---
 
 ## 🎯 Project Goal
 
-The main goal of this project is not simply to build Snake.
+The goal is not just to make a working Snake game.
 
-The goal is to become confident with Python OOP by building a complete project from scratch.
-
-Topics that will be explored throughout the project include:
+The goal is to understand:
 
 - Classes and objects
-- Constructors and `__init__`
-- Instance attributes
-- Instance methods
+- Instance attributes and methods
 - Encapsulation
 - Composition
+- Object-to-object interaction
+- Separation of responsibilities
 - Inheritance
 - Polymorphism
-- Abstraction
 - Abstract classes
-- Class methods
-- Static methods
 - Properties
+- Class methods and static methods
 - Dunder methods
-- Dataclasses
 - Enums
+- Dataclasses
 - SOLID principles
 - Design patterns
-- Refactoring
-- Clean code
-- Object-oriented design
+- Refactoring and clean architecture
+
+The game will gradually become more complex as new OOP concepts are introduced.
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -40,53 +42,27 @@ Topics that will be explored throughout the project include:
 - Git
 - GitHub
 
-Additional libraries will be introduced as the project grows.
+Future technologies may be introduced as the project evolves.
 
 ---
 
-# 🚧 Current Progress
+# 📈 Current Progress
 
-## Phase 1 — Core Game Objects
+## ✅ Snake Class
 
-### 🐍 Snake
+The `Snake` class currently handles:
 
-- [x] Create `Snake` class
-- [x] Add snake body coordinates
-- [x] Add direction
-- [x] Add alive state
-- [x] Implement movement
-- [x] Support RIGHT movement
-- [x] Support LEFT movement
-- [x] Support UP movement
-- [x] Support DOWN movement
-- [x] Prevent direct opposite-direction movement
-- [x] Implement snake growth
-- [x] Detect Apple collision
+- Snake body
+- Direction
+- Alive state
+- Movement
+- Four directions
+- Prevention of direct reversal
+- Growth
+- Apple collision detection
+- Checking whether a position is occupied
 
-### 🍎 Apple
-
-- [x] Create `Apple` class
-- [x] Add Apple position
-- [x] Add Apple points
-- [ ] Random Apple spawning
-- [ ] Apple respawning after being eaten
-
-### 🎮 Game
-
-- [ ] Create `Game` class
-- [ ] Game loop
-- [ ] User input
-- [ ] Board
-- [ ] Score management
-- [ ] Wall collision
-- [ ] Self collision
-- [ ] Game-over state
-
----
-
-# 🧱 Current Architecture
-
-The project currently contains two core classes:
+Current structure:
 
 ```text
 Snake
@@ -94,334 +70,530 @@ Snake
 ├── direction
 ├── alive
 ├── growing
-│
 ├── move()
 ├── change_direction()
 ├── is_on_apple()
+├── occupies()
 └── grow()
-
-
-Apple
-├── position
-└── points
 ```
 
-## 🐍 Snake
-
-The Snake stores its current state:
-
-```python
-body
-direction
-alive
-growing
-```
-
-The body is represented as a list of coordinate tuples:
+Example body representation:
 
 ```python
 [(5, 5), (4, 5), (3, 5)]
 ```
 
-The first coordinate represents the head and the last coordinate represents the tail.
-
-### Movement
-
-Snake movement works by:
-
-1. Finding the current head.
-2. Calculating a new head based on the current direction.
-3. Inserting the new head at the beginning of the body.
-4. Removing the tail during normal movement.
-
-Example:
-
-```text
-Before:
-
-[(5,5), (4,5), (3,5)]
-
-Move RIGHT
-
-[(6,5), (5,5), (4,5)]
-```
-
-### Growth
-
-When the Snake needs to grow, the `growing` state is temporarily set to `True`.
-
-During the next movement:
-
-- A new head is added.
-- The tail is not removed.
-- The Snake becomes one segment longer.
-- The `growing` state returns to `False`.
-
-Example:
-
-```text
-Before:
-
-[(5,5), (4,5), (3,5)]
-
-After growth + movement:
-
-[(6,5), (5,5), (4,5), (3,5)]
-```
+The first coordinate is the head and the last coordinate is the tail.
 
 ---
 
-# 🍎 Apple
+## ✅ Apple Class
 
-The Apple currently stores:
+The `Apple` class currently stores:
 
-```python
-position
-points
+- Position
+- Points
+
+It also has a `respawn()` behavior.
+
+Current structure:
+
+```text
+Apple
+├── position
+├── points
+└── respawn()
 ```
+
+The Apple no longer needs to know the board dimensions directly.
+
+---
+
+## ✅ Board Class
+
+A `Board` class was introduced to handle the playing area.
+
+```text
+Board
+├── width
+├── height
+└── random_position()
+```
+
+The board is responsible for generating valid random coordinates.
 
 Example:
 
 ```python
-apple = Apple(position=(10,10), points=10)
+board = Board(width=50, height=30)
+position = board.random_position()
 ```
 
-The Snake can check whether its head is currently on the Apple:
-
-```python
-snake.is_on_apple(apple)
-```
-
-The current interaction is:
+This generates:
 
 ```text
-Snake
-  │
-  │ checks head position
-  ↓
-Apple
-  │
-  ↓
-Collision detected
-  │
-  ↓
-snake.grow()
+0 <= x <= 49
+0 <= y <= 29
 ```
 
-Random spawning and Apple respawning will be implemented in a later stage.
+This avoids hardcoding board dimensions inside other classes.
+
+---
+
+## ✅ Game Class
+
+A `Game` class has now been introduced as the coordinator of the game.
+
+```text
+Game
+├── Board
+├── Snake
+├── Apple
+└── score
+```
+
+Current initialization:
+
+```python
+class Game:
+    def __init__(self):
+        self.board = Board()
+        self.snake = Snake()
+        self.apple = Apple()
+        self.score = 0
+```
+
+This introduced an important OOP concept:
+
+### Composition
+
+A `Game` object contains other objects:
+
+```text
+Game
+ ├── Board
+ ├── Snake
+ └── Apple
+```
+
+The Game does not need to implement everything itself.
+
+Instead, it coordinates specialized objects.
+
+---
+
+# 🍎 Safe Apple Spawning
+
+The project now prevents an Apple from spawning inside the Snake.
+
+The current approach is:
+
+```text
+Game
+ ↓
+Ask Board for random position
+ ↓
+Ask Snake if it occupies that position
+ ↓
+Occupied?
+ ├── YES → generate another position
+ └── NO  → use the position
+```
+
+Current implementation:
+
+```python
+def spawn_apple(self):
+    position = self.board.random_position()
+
+    while self.snake.occupies(position):
+        position = self.board.random_position()
+
+    self.apple.position = position
+```
+
+This introduced another important concept:
+
+### Object-to-object collaboration
+
+Game coordinates:
+
+```python
+self.board.random_position()
+```
+
+and:
+
+```python
+self.snake.occupies(position)
+```
+
+instead of directly knowing how either object performs its job.
 
 ---
 
 # 🧠 OOP Concepts Practiced So Far
 
-## Classes and Objects
+## 1. Classes and Objects
 
-Classes act as blueprints:
+A class defines the structure and behavior.
 
-```python
-class Snake:
-    ...
-```
-
-Objects are instances of those classes:
+An object is an instance of that class.
 
 ```python
 snake = Snake()
 apple = Apple()
+board = Board()
 ```
 
-## Instance Attributes
+---
 
-Objects maintain their own state:
+## 2. `__init__`
+
+Used to initialize an object's state.
+
+```python
+def __init__(self):
+    self.score = 0
+```
+
+---
+
+## 3. `self`
+
+`self` refers to the current object.
+
+```python
+self.body
+self.position
+self.score
+```
+
+---
+
+## 4. Instance Attributes
+
+Each object maintains its own state.
 
 ```python
 self.body
 self.direction
-self.alive
-self.growing
+self.position
+self.points
 ```
 
-## Instance Methods
+---
 
-Objects contain behavior:
+## 5. Instance Methods
+
+Objects define behavior through methods.
+
+Examples:
 
 ```python
 snake.move()
-snake.change_direction("UP")
 snake.grow()
+apple.respawn()
+board.random_position()
 ```
 
-## Encapsulation
+---
 
-The Snake controls its own behavior instead of allowing external code to directly manipulate its internal state.
+## 6. Encapsulation
+
+Objects manage their own state and behavior.
 
 For example:
 
 ```python
-snake.change_direction("UP")
+snake.occupies(position)
 ```
 
-rather than relying entirely on:
+allows Snake to answer whether a position belongs to its body without other objects needing to understand how its body is stored.
+
+---
+
+## 7. Composition
+
+`Game` contains other objects:
 
 ```python
-snake.direction = "UP"
+self.board = Board()
+self.snake = Snake()
+self.apple = Apple()
 ```
 
-The `Snake` class can therefore enforce rules such as preventing direct reversal:
+This is one of the major OOP concepts being practiced in this project.
+
+---
+
+## 8. Separation of Responsibilities
+
+The project is gradually assigning each responsibility to the appropriate object.
 
 ```text
-RIGHT → LEFT ❌
-LEFT  → RIGHT ❌
-UP    → DOWN ❌
-DOWN  → UP ❌
+Snake
+→ Owns and manages its body
+
+Apple
+→ Owns and manages its position and points
+
+Board
+→ Knows the dimensions of the playing area
+→ Generates valid board positions
+
+Game
+→ Coordinates the objects
+→ Manages overall game state
 ```
 
-## Object Interaction
+This is helping develop the intuition:
 
-The Snake and Apple now interact with each other:
+> **Which object should be responsible for this behavior?**
+
+---
+
+# 🐍 Current Architecture
+
+```text
+                    ┌──────────────┐
+                    │     Game     │
+                    │              │
+                    │    score     │
+                    └──────┬───────┘
+                           │
+             ┌─────────────┼─────────────┐
+             ↓             ↓             ↓
+       ┌──────────┐  ┌──────────┐  ┌──────────┐
+       │  Board   │  │  Snake   │  │  Apple   │
+       ├──────────┤  ├──────────┤  ├──────────┤
+       │ width    │  │ body     │  │ position │
+       │ height   │  │ direction│  │ points   │
+       │          │  │ alive    │  │          │
+       │ random_  │  │ growing  │  │ respawn()│
+       │ position │  │ move()   │  │          │
+       │          │  │ occupies │  │          │
+       └──────────┘  └──────────┘  └──────────┘
+```
+
+---
+
+# 🧪 Important Python Lessons
+
+### Mutable Default Arguments
+
+Avoid:
 
 ```python
-snake.is_on_apple(apple)
+def __init__(self, body=[]):
 ```
 
-This is the beginning of designing multiple objects that cooperate rather than putting the entire game into one class.
-
-## Mutable Default Arguments
-
-The project also encountered and fixed a common Python issue.
-
-Instead of:
-
-```python
-def __init__(self, body=[(5,5)]):
-```
-
-the constructor now uses:
+Instead:
 
 ```python
 def __init__(self, body=None):
     if body is None:
-        body = [(5,5)]
+        body = [(5, 5)]
 ```
 
-This ensures that different Snake objects don't accidentally share the same mutable list.
+---
+
+### Tuples for Coordinates
+
+Coordinates are represented using tuples:
+
+```python
+(5, 5)
+```
+
+while the Snake body is a list of coordinate tuples:
+
+```python
+[(5, 5), (4, 5), (3, 5)]
+```
+
+This allows the body to change while individual coordinates remain immutable.
+
+---
+
+### Boolean State
+
+Game state uses actual Boolean values:
+
+```python
+True
+False
+```
+
+rather than:
+
+```python
+'True'
+'False'
+```
+
+---
+
+# 🚧 Current Development Status
+
+### Completed
+
+- [x] Basic Snake class
+- [x] Snake body representation
+- [x] Four-direction movement
+- [x] Direct-reversal prevention
+- [x] Snake growth
+- [x] Apple class
+- [x] Apple collision detection
+- [x] Board class
+- [x] Random board positions
+- [x] Snake position checking
+- [x] Game class
+- [x] Game composition
+- [x] Safe Apple spawning logic
+- [x] Separation of object responsibilities
+
+### Currently Working On
+
+- [ ] Improve Apple `respawn()` design
+- [ ] Connect `Game.spawn_apple()` with `Apple.respawn()`
+- [ ] Game update loop
+- [ ] User input
+- [ ] Wall collision
+- [ ] Self collision
+- [ ] Game-over logic
+- [ ] Score management
+
+---
+
+# 🚀 Planned Roadmap
+
+## Phase 1 — Basic Snake
+- [x] Snake class
+- [x] Movement
+- [x] Direction changes
+- [x] Growth
+
+## Phase 2 — Game Objects
+- [x] Apple class
+- [x] Board class
+- [x] Game class
+- [x] Object interaction
+- [x] Safe Apple spawning
+
+## Phase 3 — Core Game
+- [ ] Game loop
+- [ ] User input
+- [ ] Wall collision
+- [ ] Self collision
+- [ ] Game over
+- [ ] Score
+
+## Phase 4 — Advanced OOP
+- [ ] Inheritance
+- [ ] Polymorphism
+- [ ] Abstract classes
+- [ ] Properties
+- [ ] Class methods
+- [ ] Static methods
+- [ ] Dunder methods
+- [ ] Enums
+- [ ] Dataclasses
+
+## Phase 5 — Game Expansion
+- [ ] Multiple Apples
+- [ ] Special Apples
+- [ ] Golden Apple
+- [ ] Poison Apple
+- [ ] Obstacles
+- [ ] Walls
+- [ ] Portals
+- [ ] Speed boosts
+- [ ] Slowdown effects
+- [ ] Levels
+- [ ] Lives
+- [ ] Pause / Restart
+- [ ] Different game modes
+
+## Phase 6 — Advanced Features
+- [ ] AI Snake
+- [ ] Player vs AI
+- [ ] Persistent high scores
+- [ ] Leaderboard
+- [ ] Save / Load game
+- [ ] Final polished version
+
+## Phase 7 — Software Design
+- [ ] SOLID principles
+- [ ] Refactoring
+- [ ] Design patterns
+- [ ] Testing
+- [ ] Clean architecture
 
 ---
 
 # 📚 Learning Approach
 
-This project is intentionally being built incrementally.
+This project is intentionally being developed **incrementally**.
 
-Instead of copying a finished Snake implementation:
+Instead of learning OOP theoretically and then trying to apply it later, each feature introduces a new design problem.
 
-1. Design the object.
-2. Identify its state.
-3. Identify its responsibilities.
-4. Implement a small feature.
-5. Test it.
-6. Find bugs.
-7. Understand why the bug occurred.
-8. Refactor when necessary.
-9. Introduce new OOP concepts when the project requires them.
+For example:
 
-The goal is to understand **why** a particular OOP feature is useful rather than simply memorizing its syntax.
+```text
+Need movement
+    ↓
+Instance methods
 
----
+Need Snake state
+    ↓
+Instance attributes
 
-# 🗺️ Planned Roadmap
+Need Apple interaction
+    ↓
+Object collaboration
 
-## Phase 1 — Basic Snake
+Need Board dimensions
+    ↓
+Separation of responsibilities
 
-- [x] Snake
-- [x] Apple
-- [x] Movement
-- [x] Direction control
-- [x] Snake growth
-- [x] Snake/Apple collision detection
-- [ ] Random Apple spawning
-- [ ] Apple respawning
-- [ ] Score
-- [ ] Game loop
-- [ ] Board
-- [ ] Wall collision
-- [ ] Self collision
-- [ ] Game over
+Need Game coordination
+    ↓
+Composition
 
-## Phase 2 — OOP Expansion
+Need different game entities
+    ↓
+Inheritance / Polymorphism
+```
 
-- [ ] Game class
-- [ ] Composition
-- [ ] Game state
-- [ ] Input handling
-- [ ] Rendering
-- [ ] Better separation of responsibilities
+The objective is to develop the ability to look at a problem and ask:
 
-## Phase 3 — Advanced OOP
-
-- [ ] Inheritance
-- [ ] Polymorphism
-- [ ] Abstract classes
-- [ ] Interfaces/design contracts
-- [ ] Properties
-- [ ] Class methods
-- [ ] Static methods
-
-## Phase 4 — Python Object Model
-
-- [ ] `__str__`
-- [ ] `__repr__`
-- [ ] `__eq__`
-- [ ] `__len__`
-- [ ] `__contains__`
-- [ ] Other useful dunder methods
-
-## Phase 5 — Better Data Modeling
-
-- [ ] Dataclasses
-- [ ] Enums
-- [ ] Type hints
-- [ ] Validation
-
-## Phase 6 — Software Design
-
-- [ ] SOLID principles
-- [ ] Composition over inheritance
-- [ ] Dependency injection
-- [ ] Refactoring
-- [ ] Design patterns
-
-## Phase 7 — Advanced Features
-
-- [ ] Multiple Apple types
-- [ ] Special food
-- [ ] Obstacles
-- [ ] Levels
-- [ ] Increasing difficulty
-- [ ] Multiple game modes
-- [ ] High-score persistence
-- [ ] AI-controlled Snake
-- [ ] Player vs AI
+> **"Which object should be responsible for this?"**
 
 ---
 
 # 📖 Reference
 
-Initial project inspiration:
+The initial Snake implementation was inspired by:
 
-Robert Heaton's Snake programming project:
+**Programming Project #5: Snake — Robert Heaton**
 
 https://robertheaton.com/2018/12/02/programming-project-5-snake/
 
-The implementation in this repository is being developed independently and expanded significantly for the purpose of learning Python OOP.
+The project is being extended significantly beyond the original implementation to serve as an OOP learning project.
 
 ---
 
-# 🚀 Status
+# 📌 Status
 
-**Work in Progress**
+**🚧 Work in Progress**
 
-Current focus:
+This project is being built step-by-step while learning Python OOP.
 
-> Building the core Snake and Apple objects while learning Python OOP through implementation, debugging, and refactoring.
+The final goal is not simply:
 
-The project will continue evolving from a simple Snake game into a larger OOP-based application.
+> "A Snake game that works."
+
+It is:
+
+> **"A Snake game that demonstrates strong object-oriented design."** 🐍🔥
