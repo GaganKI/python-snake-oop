@@ -57,8 +57,8 @@ class Apple:
         self.position = position
         self.points = points
         
-    def respawn(self,board):
-        self.position = board.random_position()
+    def respawn(self,position):
+        self.position = position
         
 class Board:
     def __init__(self,width = 20,height = 20):
@@ -85,7 +85,13 @@ class Game:
         while self.snake.occupies(position):
             position = self.board.random_position()
 
-        self.apple.position = position
+        self.apple.respawn(position)
         
 game = Game()
+
+game.snake.body = [(5, 5), (6, 5), (7, 5)]
+game.spawn_apple()
+
+print(game.apple.position)
+print(game.snake.occupies(game.apple.position))
 

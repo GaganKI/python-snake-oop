@@ -102,16 +102,16 @@ Current structure:
 Apple
 ├── position
 ├── points
-└── respawn()
+└── respawn(position)
 ```
 
-The Apple no longer needs to know the board dimensions directly.
+The `respawn(position)` method updates the Apple’s position. Apple no longer needs to generate random coordinates or know the board dimensions.
 
 ---
 
 ## ✅ Board Class
 
-A `Board` class was introduced to handle the playing area.
+The `Board` class handles the playing area's dimensions and generates random coordinates.
 
 ```text
 Board
@@ -120,8 +120,6 @@ Board
 └── random_position()
 ```
 
-The board is responsible for generating valid random coordinates.
-
 Example:
 
 ```python
@@ -129,11 +127,11 @@ board = Board(width=50, height=30)
 position = board.random_position()
 ```
 
-This generates:
+The generated coordinates satisfy:
 
 ```text
-0 <= x <= 49
-0 <= y <= 29
+0 <= x < width
+0 <= y < height
 ```
 
 This avoids hardcoding board dimensions inside other classes.
@@ -142,14 +140,15 @@ This avoids hardcoding board dimensions inside other classes.
 
 ## ✅ Game Class
 
-A `Game` class has now been introduced as the coordinator of the game.
+The `Game` class coordinates the objects and manages the score.
 
 ```text
 Game
-├── Board
-├── Snake
-├── Apple
-└── score
+├── board
+├── snake
+├── apple
+├── score
+└── spawn_apple()
 ```
 
 Current initialization:
@@ -163,7 +162,7 @@ class Game:
         self.score = 0
 ```
 
-This introduced an important OOP concept:
+This introduces an important OOP concept.
 
 ### Composition
 
@@ -171,33 +170,31 @@ A `Game` object contains other objects:
 
 ```text
 Game
- ├── Board
- ├── Snake
- └── Apple
+├── Board
+├── Snake
+└── Apple
 ```
 
-The Game does not need to implement everything itself.
-
-Instead, it coordinates specialized objects.
+The Game does not need to implement everything itself. Instead, it coordinates specialized objects.
 
 ---
 
 # 🍎 Safe Apple Spawning
 
-The project now prevents an Apple from spawning inside the Snake.
+The game now prevents an Apple from spawning inside the Snake.
 
 The current approach is:
 
 ```text
 Game
- ↓
-Ask Board for random position
- ↓
+  ↓
+Ask Board for a random position
+  ↓
 Ask Snake if it occupies that position
- ↓
+  ↓
 Occupied?
- ├── YES → generate another position
- └── NO  → use the position
+  ├── YES → generate another position
+  └── NO  → give the position to Apple
 ```
 
 Current implementation:
@@ -209,26 +206,34 @@ def spawn_apple(self):
     while self.snake.occupies(position):
         position = self.board.random_position()
 
-    self.apple.position = position
+    self.apple.respawn(position)
 ```
 
-This introduced another important concept:
+This was tested successfully. The Apple spawned inside the board, and the following check returned `False`:
+
+```python
+game.snake.occupies(game.apple.position)
+```
 
 ### Object-to-object collaboration
 
-Game coordinates:
+Game coordinates the other objects by calling their methods:
 
 ```python
 self.board.random_position()
 ```
 
-and:
-
 ```python
 self.snake.occupies(position)
 ```
 
-instead of directly knowing how either object performs its job.
+```python
+self.apple.respawn(position)
+```
+
+Each object performs its own responsibility instead of Game implementing all the internal logic itself.
+
+**Known limitation:** if the Snake occupies every cell on the board, the current `while` loop will never finish. Handling this edge case is a future improvement.
 
 ---
 
@@ -236,7 +241,7 @@ instead of directly knowing how either object performs its job.
 
 ## 1. Classes and Objects
 
-A class defines the structure and behavior.
+A class defines structure and behavior.
 
 An object is an instance of that class.
 
@@ -244,9 +249,8 @@ An object is an instance of that class.
 snake = Snake()
 apple = Apple()
 board = Board()
+game = Game()
 ```
-
----
 
 ## 2. `__init__`
 
@@ -257,8 +261,6 @@ def __init__(self):
     self.score = 0
 ```
 
----
-
 ## 3. `self`
 
 `self` refers to the current object.
@@ -268,8 +270,6 @@ self.body
 self.position
 self.score
 ```
-
----
 
 ## 4. Instance Attributes
 
@@ -282,8 +282,6 @@ self.position
 self.points
 ```
 
----
-
 ## 5. Instance Methods
 
 Objects define behavior through methods.
@@ -293,11 +291,11 @@ Examples:
 ```python
 snake.move()
 snake.grow()
-apple.respawn()
+snake.occupies(position)
+apple.respawn(position)
 board.random_position()
+game.spawn_apple()
 ```
-
----
 
 ## 6. Encapsulation
 
@@ -306,12 +304,16 @@ Objects manage their own state and behavior.
 For example:
 
 ```python
+apple.respawn(position)
+```
+
+allows Apple to update its own position, while:
+
+```python
 snake.occupies(position)
 ```
 
-allows Snake to answer whether a position belongs to its body without other objects needing to understand how its body is stored.
-
----
+allows Snake to answer whether a coordinate belongs to its body.
 
 ## 7. Composition
 
@@ -325,29 +327,27 @@ self.apple = Apple()
 
 This is one of the major OOP concepts being practiced in this project.
 
----
-
 ## 8. Separation of Responsibilities
 
-The project is gradually assigning each responsibility to the appropriate object.
+The project assigns responsibilities to the appropriate objects.
 
 ```text
 Snake
-→ Owns and manages its body
+→ Owns and manages its body, direction, movement, and growth
 
 Apple
-→ Owns and manages its position and points
+→ Manages its position and points
 
 Board
-→ Knows the dimensions of the playing area
-→ Generates valid board positions
+→ Knows the playing area's dimensions
+→ Generates random coordinates
 
 Game
 → Coordinates the objects
 → Manages overall game state
 ```
 
-This is helping develop the intuition:
+This helps develop the intuition:
 
 > **Which object should be responsible for this behavior?**
 
@@ -362,25 +362,25 @@ This is helping develop the intuition:
                     │    score     │
                     └──────┬───────┘
                            │
-             ┌─────────────┼─────────────┐
-             ↓             ↓             ↓
-       ┌──────────┐  ┌──────────┐  ┌──────────┐
-       │  Board   │  │  Snake   │  │  Apple   │
-       ├──────────┤  ├──────────┤  ├──────────┤
-       │ width    │  │ body     │  │ position │
-       │ height   │  │ direction│  │ points   │
-       │          │  │ alive    │  │          │
-       │ random_  │  │ growing  │  │ respawn()│
-       │ position │  │ move()   │  │          │
-       │          │  │ occupies │  │          │
-       └──────────┘  └──────────┘  └──────────┘
+              ┌────────────┼────────────┐
+              ↓            ↓            ↓
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │  Board   │  │  Snake   │  │  Apple   │
+        ├──────────┤  ├──────────┤  ├──────────┤
+        │ width    │  │ body     │  │ position │
+        │ height   │  │ direction│  │ points   │
+        │          │  │ alive    │  │          │
+        │ random_  │  │ growing  │  │ respawn()│
+        │ position │  │ move()   │  │          │
+        │          │  │ occupies │  │          │
+        └──────────┘  └──────────┘  └──────────┘
 ```
 
 ---
 
 # 🧪 Important Python Lessons
 
-### Mutable Default Arguments
+## Mutable Default Arguments
 
 Avoid:
 
@@ -396,9 +396,7 @@ def __init__(self, body=None):
         body = [(5, 5)]
 ```
 
----
-
-### Tuples for Coordinates
+## Tuples for Coordinates
 
 Coordinates are represented using tuples:
 
@@ -406,17 +404,15 @@ Coordinates are represented using tuples:
 (5, 5)
 ```
 
-while the Snake body is a list of coordinate tuples:
+The Snake body is a list of coordinate tuples:
 
 ```python
 [(5, 5), (4, 5), (3, 5)]
 ```
 
-This allows the body to change while individual coordinates remain immutable.
+This allows the body to change while individual coordinate tuples remain immutable.
 
----
-
-### Boolean State
+## Boolean State
 
 Game state uses actual Boolean values:
 
@@ -425,7 +421,7 @@ True
 False
 ```
 
-rather than:
+rather than strings:
 
 ```python
 'True'
@@ -436,7 +432,7 @@ rather than:
 
 # 🚧 Current Development Status
 
-### Completed
+## Completed
 
 - [x] Basic Snake class
 - [x] Snake body representation
@@ -450,31 +446,35 @@ rather than:
 - [x] Snake position checking
 - [x] Game class
 - [x] Game composition
-- [x] Safe Apple spawning logic
+- [x] Safe Apple spawning
+- [x] `Apple.respawn(position)` updates Apple's own state
+- [x] Tested Apple spawning outside the Snake's body
 - [x] Separation of object responsibilities
 
-### Currently Working On
+## Currently Working On
 
-- [ ] Improve Apple `respawn()` design
-- [ ] Connect `Game.spawn_apple()` with `Apple.respawn()`
-- [ ] Game update loop
-- [ ] User input
-- [ ] Wall collision
-- [ ] Self collision
+- [ ] Add `Board.is_inside(position)`
+- [ ] Wall collision detection
+- [ ] Self-collision detection
 - [ ] Game-over logic
 - [ ] Score management
+- [ ] Game update loop
+- [ ] User input
+- [ ] Handle the full-board Apple-spawning edge case
 
 ---
 
 # 🚀 Planned Roadmap
 
 ## Phase 1 — Basic Snake
+
 - [x] Snake class
 - [x] Movement
 - [x] Direction changes
 - [x] Growth
 
 ## Phase 2 — Game Objects
+
 - [x] Apple class
 - [x] Board class
 - [x] Game class
@@ -482,6 +482,7 @@ rather than:
 - [x] Safe Apple spawning
 
 ## Phase 3 — Core Game
+
 - [ ] Game loop
 - [ ] User input
 - [ ] Wall collision
@@ -490,6 +491,7 @@ rather than:
 - [ ] Score
 
 ## Phase 4 — Advanced OOP
+
 - [ ] Inheritance
 - [ ] Polymorphism
 - [ ] Abstract classes
@@ -501,6 +503,7 @@ rather than:
 - [ ] Dataclasses
 
 ## Phase 5 — Game Expansion
+
 - [ ] Multiple Apples
 - [ ] Special Apples
 - [ ] Golden Apple
@@ -516,6 +519,7 @@ rather than:
 - [ ] Different game modes
 
 ## Phase 6 — Advanced Features
+
 - [ ] AI Snake
 - [ ] Player vs AI
 - [ ] Persistent high scores
@@ -524,6 +528,7 @@ rather than:
 - [ ] Final polished version
 
 ## Phase 7 — Software Design
+
 - [ ] SOLID principles
 - [ ] Refactoring
 - [ ] Design patterns
@@ -536,7 +541,7 @@ rather than:
 
 This project is intentionally being developed **incrementally**.
 
-Instead of learning OOP theoretically and then trying to apply it later, each feature introduces a new design problem.
+Instead of learning OOP theoretically and applying it later, each feature introduces a practical design problem.
 
 For example:
 
@@ -568,7 +573,7 @@ Inheritance / Polymorphism
 
 The objective is to develop the ability to look at a problem and ask:
 
-> **"Which object should be responsible for this?"**
+> **Which object should be responsible for this?**
 
 ---
 
@@ -580,7 +585,7 @@ The initial Snake implementation was inspired by:
 
 https://robertheaton.com/2018/12/02/programming-project-5-snake/
 
-The project is being extended significantly beyond the original implementation to serve as an OOP learning project.
+The project is being extended significantly beyond the original implementation to serve as a Python OOP learning project.
 
 ---
 
